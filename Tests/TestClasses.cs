@@ -134,4 +134,41 @@ namespace TestClasses
             this.loop = loop;
         }
     }
+
+    class E
+    {
+        public Z z;
+        public E()
+        {
+
+        }
+
+        [DependencyMethod]
+        public void AssignZ(Z z)
+        {
+            this.z = z;
+        }
+    }
+
+    class F
+    {
+        public Z z1, z2;
+
+        public F()
+        {
+
+        }
+
+        [DependencyMethod]
+        public void Assignz1(Z z)
+        {
+            z1 = z;
+        }
+
+        [DependencyMethod]
+        public void Assignz2(Z z)
+        {
+            z2 = z;
+        }
+    }
 }

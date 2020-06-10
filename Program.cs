@@ -5,10 +5,7 @@ using Container;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
-public class DependencyConstructor : Attribute { }
-
-public class DependencyMethod : Attribute { }
+using Attributes;
 
 namespace DependencyInjectionEngine
 {
@@ -54,19 +51,28 @@ namespace DependencyInjectionEngine
         }
     }
 
+     class Loop3
+    {
+        Loop3 loop;
+
+        public Loop3()
+        {
+
+        }
+
+        [DependencyMethod]
+        public void SomeMethod(Loop3 loop)
+        {
+            this.loop = loop;
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
-            Type type = typeof(A);
-            foreach (var constructor in type.GetConstructors())
-            {
-                var test =  constructor.CustomAttributes.Any(
-                    (attr) => attr.AttributeType == typeof(DependencyConstructor)
-                );
-
-                Console.WriteLine(test);
-            }
+            SimpleContainer container = new SimpleContainer();
+            container.Resolve<Loop3>();
         }
     }
 }

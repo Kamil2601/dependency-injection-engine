@@ -84,16 +84,6 @@ namespace Container
 
         private Object CreateObject(Type type, HashSet<Type> dependencies)
         {
-
-            if (dependencies.Contains(type))
-            {
-                throw new Exception(String.Format(
-                    "Cycle in dependency tree! Repeated type: {0}",
-                    type));
-            }
-
-            dependencies.Add(type);
-
             ConstructorInfo[] constructors = type.GetConstructors();
 
             ConstructorInfo constructor = constructors.Aggregate(
@@ -123,16 +113,11 @@ namespace Container
                 Resolve(param.ParameterType, dependencies)
             ).ToArray();
 
-            dependencies.Remove(type);
-
             return constructor.Invoke(arguments);
         }
 
         private void InvokeMethods(Object obj, Type type, HashSet<Type> dependencies)
         {
-            dependencies.Add(type);
-            Console.WriteLine("InvokeMethods");
-            Console.WriteLine(type);
             MethodInfo[] methods = type.GetMethods();
             foreach (MethodInfo method in methods)
             {
@@ -141,7 +126,6 @@ namespace Container
                     method.ReturnType == typeof(void) &&
                     method.GetParameters().Count() > 0)
                 {
-                    Console.WriteLine(method.Name);
                     ParameterInfo[] parameters = method.GetParameters();
 
                     var arguments = parameters.Select((param) =>
@@ -151,17 +135,30 @@ namespace Container
                     method.Invoke(obj, arguments);
                 }
             }
-
-            dependencies.Remove(type);
         }
 
         private Object Resolve(Type type, HashSet<Type> dependencies)
         {
-            Object result;
-            while (registered.ContainsKey(type) && registered[type].implementBy != type)
+            if (dependencies.Contains(type))
             {
-                type = registered[type].implementBy;
+                throw new Exception(String.Format(
+                    "Cycle in dependency tree! Repeated type: {0}",
+                    type));
             }
+
+            dependencies.Add(type);
+
+            Object result;
+            
+            if (registered.ContainsKey(type) && registered[type].implementBy != type)
+            {
+                var nextType = registered[type].implementBy;
+                result = Resolve(nextType, dependencies);
+                dependencies.Remove(type);
+                return result;
+            }
+
+            
 
             if (type.IsInterface && registered[type].instance == null)
                 throw new Exception(String.Format("Unknown implemenation of interface: {0}!", type));
@@ -190,6 +187,8 @@ namespace Container
 
             InvokeMethods(result, type, dependencies);
 
+            dependencies.Remove(type);
+
             return result;
         }
 
@@ -197,6 +196,13 @@ namespace Container
         {
             Type type = typeof(T);
             return (T)Resolve(type, new HashSet<Type>());
+        }
+
+        public void BuildUp<T>(T instance)
+        {
+            Type type = typeof(T);
+            HashSet<Type> dependencies = new HashSet<Type>{type};
+            InvokeMethods(instance, type, dependencies);
         }
     }
 }
