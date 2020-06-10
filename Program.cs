@@ -1,21 +1,31 @@
-﻿using System;
+﻿
+
+using System;
 using Container;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+
+public class DependencyConstructor : Attribute { }
+
+public class DependencyMethod : Attribute { }
 
 namespace DependencyInjectionEngine
 {
+
+
     class B
     {
 
     }
     class A
     {
+        [DependencyConstructor]
         public A()
         {
 
         }
-        
+
         public A(B x)
         {
 
@@ -29,6 +39,7 @@ namespace DependencyInjectionEngine
 
     class Loop
     {
+        public B TheB { get; set; }
         public Loop(Loop2 loop)
         {
 
@@ -47,8 +58,15 @@ namespace DependencyInjectionEngine
     {
         static void Main(string[] args)
         {
-            SimpleContainer container = new SimpleContainer();
-            container.Resolve<Loop>();
+            Type type = typeof(A);
+            foreach (var constructor in type.GetConstructors())
+            {
+                var test =  constructor.CustomAttributes.Any(
+                    (attr) => attr.AttributeType == typeof(DependencyConstructor)
+                );
+
+                Console.WriteLine(test);
+            }
         }
     }
 }
