@@ -3,6 +3,8 @@
 using NUnit.Framework;
 using Container;
 using TestClasses;
+using Locator;
+using Factory;
 
 namespace Tests2
 {
@@ -32,6 +34,8 @@ namespace Tests2
                 container.Resolve<Loop3>();
             });
         }
+
+        // Zadanie 2
 
         [Test]
         public void BuildUpTest1()
@@ -82,6 +86,48 @@ namespace Tests2
             Assert.IsNotNull(obj.z1);
             Assert.IsNotNull(obj.z2);
             Assert.AreNotSame(obj.z1, obj.z2);
+        }
+
+        [Test]
+        public void LocatorTest1()
+        {
+            SimpleContainer c = new SimpleContainer();
+            ContainerProviderDelegate containerProvider = () => c;
+            ServiceLocator.SetContainerProvider(containerProvider);
+            SimpleContainer c2 = ServiceLocator.Current.GetInstance<SimpleContainer>();
+            Assert.AreSame(c,c2);
+        }
+
+        [Test]
+        public void LocatorTest2()
+        {
+            SimpleContainer c = new SimpleContainer();
+            ContainerProviderDelegate containerProvider = () => c;
+            ServiceLocator.SetContainerProvider(containerProvider);
+            SimpleContainer c2 = ServiceLocator.Current.GetInstance<SimpleContainer>();
+            Z obj = new Z();
+            c.RegisterInstance<Z>(obj);
+            Z obj2 = ServiceLocator.Current.GetInstance<Z>();
+            Assert.AreSame(obj, obj2);
+        }
+
+        
+
+        [Test]
+        public void FactoryTest()
+        {
+            SimpleContainer container = new SimpleContainer();
+            container.RegisterInstance<string>("Something");
+            NotifierFactory.SetProvider(() => container.Resolve<Notifier>());
+            DoTest();
+        }
+
+        private void DoTest()
+        {
+            NotifierFactory factory = new NotifierFactory();
+            INotifier notifier = factory.CreateNotifier();
+            string msg = notifier.Notify();
+            Assert.AreEqual(msg, "Message: Something");
         }
     }
 }

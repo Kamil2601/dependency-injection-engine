@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Container\Container.csproj" />
+    <ProjectReference Include="..\Locator\Locator.csproj" />
+    <ProjectReference Include="..\Factory\Factory.csproj" />
   </ItemGroup>
 
 </Project>
